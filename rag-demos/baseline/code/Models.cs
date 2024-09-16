@@ -1,0 +1,1 @@
+public record AskQuestion(string Question);

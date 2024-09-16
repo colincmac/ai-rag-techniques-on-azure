@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>RAG Techniques on AI RAG Techniques</title>
+    <link>http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/</link>
+    <description>Recent content in RAG Techniques on AI RAG Techniques</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/csharp_notebook/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/csharp_notebook/</guid>
+      <description>Test CSharp Notebook #i &amp;#34;nuget:https://api.nuget.org/v3/index.json&amp;#34; #i &amp;#34;nuget:https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json&amp;#34; #i &amp;#34;nuget:https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json&amp;#34; #r &amp;#34;nuget:Microsoft.Data.Analysis, 0.21.0&amp;#34; #r &amp;#34;nuget: Plotly.NET.Interactive, 4.2.0&amp;#34; #r &amp;#34;nuget: Plotly.Net, 4.2.0&amp;#34; using Microsoft.Data.Analysis; Example Output&#xD;Restore sourceshttps://api.nuget.org/v3/index.jsonhttps://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.jsonhttps://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.jsonInstalled PackagesMicrosoft.Data.Analysis, 0.21.0Plotly.Net, 4.2.0Plotly.NET.Interactive, 4.2.0&#xD;DateTimeDataFrameColumn dateTimes = new DateTimeDataFrameColumn(&amp;#34;DateTimes&amp;#34;); // Default length is 0. Int32DataFrameColumn ints = new Int32DataFrameColumn(&amp;#34;Ints&amp;#34;, 6); // Makes a column of length 3. Filled with nulls initially StringDataFrameColumn strings = new StringDataFrameColumn(&amp;#34;Strings&amp;#34;, 6); // Makes a column of length 3.</description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/rag-techniques/csharp_notebook/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/scenarios/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/tags/notebook/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/tags/post/</loc>
+  </url><url>
+    <loc>http://localhost:1313/ai-rag-techniques-on-azure/tags/</loc>
+  </url>
+</urlset>

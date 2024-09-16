@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "ai-rag-techniques-on-azure"
+version = "0.1.0"
+description = ""
+authors = ["Colin McCullough <cmccullough@microsoft.com>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12,<3.13"
+jupyter-console = "^6.6.3"
+jupyter = "^1.0.0"
+poethepoet = "^0.27.0"
+pyzmq = "25.1.2"
+python-dotenv = "^1.0.1"
+plotly = "^5.24.0"
+pandas = "^2.2.2"
+requests = "^2.32.3"
+semantic-kernel = "^1.8"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+_convert_notebooks_md = 'jupyter nbconvert --output-dir=docs/content/rag-techniques --output="{notebook_name}" --template=docs/nb_template_md --to markdown eng/test_assets/csharp_notebook.ipynb'
+
+[[tool.poe.tasks.convert_docsite_notebooks]]
+sequence = ['_convert_notebooks_md']
+ignore_fail = 'return_non_zero'

@@ -1,0 +1,11 @@
+{
+  "tags": [
+    "baseline"
+  ],
+  "name": "baseline",
+  "description": "Baseline demo",
+  "version": "0.0.1",
+  "bicepDeploy": "main.bicep",
+  "notebook": "baseline.ipynb",
+  "evaluate": "evaluate.py"
+}

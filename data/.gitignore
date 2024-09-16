@@ -1,0 +1,7 @@
+yfinance.cache
+sec_data/10k*
+sec_data/8K*
+sec_data/13*
+basic_financials
+sec_data/master.idx
+sec_data/master.csv

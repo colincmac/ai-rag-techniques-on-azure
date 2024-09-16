@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on AI RAG Techniques</title>
+    <link>http://localhost:1313/ai-rag-techniques-on-azure/tags/</link>
+    <description>Recent content in Tags on AI RAG Techniques</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <atom:link href="http://localhost:1313/ai-rag-techniques-on-azure/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Notebook</title>
+      <link>http://localhost:1313/ai-rag-techniques-on-azure/tags/notebook/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/ai-rag-techniques-on-azure/tags/notebook/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>Post</title>
+      <link>http://localhost:1313/ai-rag-techniques-on-azure/tags/post/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/ai-rag-techniques-on-azure/tags/post/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

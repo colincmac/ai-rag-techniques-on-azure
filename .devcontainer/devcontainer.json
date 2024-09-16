@@ -1,0 +1,47 @@
+{
+  "name": "Ubuntu",
+  "image": "mcr.microsoft.com/devcontainers/base:bullseye",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "github.vscode-github-actions",
+        "esbenp.prettier-vscode",
+        "GitHub.copilot",
+        "github.vscode-pull-request-github",
+        "ms-azuretools.vscode-bicep",
+        "ms-vsliveshare.vsliveshare",
+        "ms-vscode.azure-account",
+        "ms-vscode-remote.remote-containers",
+        "github.copilot-chat",
+        "ms-toolsai.jupyter",
+        "ms-dotnettools.vscode-dotnet-runtime",
+        "ms-dotnettools.csdevkit",
+        "ms-dotnettools.dotnet-interactive-vscode"
+      ]
+    }
+  },
+  "features": {
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "version": "latest",
+      "installBicep": true
+    },
+    "ghcr.io/devcontainers/features/dotnet:2": {
+      "version": "lts"
+    },
+    "ghcr.io/devcontainers/features/node:1": {},
+    "ghcr.io/devcontainers/features/python:1": {
+      "version": "3.12"
+    },
+    "ghcr.io/devcontainers/features/powershell:1": {
+      "modules": ["Az.Accounts", "Az.Resources", "Az.KeyVault", "Pester"]
+    },
+    "ghcr.io/devcontainers-contrib/features/prettier:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    // act to run github actions locally
+    "ghcr.io/devcontainers-contrib/features/act-asdf:2": {},
+    // for act
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/terraform:1": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {}
+  }
+}
