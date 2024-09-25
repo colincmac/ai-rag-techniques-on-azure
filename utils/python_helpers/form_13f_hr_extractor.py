@@ -6,10 +6,11 @@ import numpy as np
 import pandas as pd
 import xmltodict
 from glob import glob
+import json
 FILING_MANAGER_ADDRESS_COL = 'managerAddress'
 FILING_MANAGER_NAME_COL = 'managerName'
 FILING_MANAGER_CIK_COL = 'managerCik'
-REPORT_PERIOD_COL = 'reportCalendarOrQuarter'
+REPORT_PERIOD_COL = 'reportDate'
 COMPANY_CUSIP_COL = 'cusip'
 COMPANY_CUSIP6_COL = 'cusip6'
 COMPANY_NAME_COL = 'companyName'
@@ -17,16 +18,30 @@ SOURCE_ID_COL = 'source'
 VALUE_COL = 'value'
 SHARES_COL = 'shares'
 class Form13F_HR_Extractor:
-    def __init__(self) -> None:
-        pass
+
+    def __init__(self, input_dir: str, output_dir: str, output_filename: str = '13f_hr_data.json') -> None:
+        self.input_directory = input_dir
+        self.output_filename = output_filename
+        self.output_json_file = f"{output_dir}/{output_filename}"
     
-    def process_directory_files(self, input_directory: str, output_csv_file: str, top_n_periods: int = None):
-        files = glob(f"{input_directory}/*/*")
+    def process_directory_files(self, top_n_periods: int = None):
+        # <root>/<yyyy_mm>/<cik>_<yyyy>-<mm>-<dd>_<sequence>.txt
+        files = glob(f"{self.input_directory}/*/*")
+        print(files)
+        if not files:
+            print(f'No files found in {self.input_directory}')
+            return
         filings_df, failures = self.parse_from_dir(files)
         stg_df = self.aggregate_data(filings_df)
         if top_n_periods is not None:
             stg_df = self.filter_data(stg_df, top_n_periods)
-        stg_df.to_csv(output_csv_file, index=False)
+        # pandas to_json outputs urls with a redundant backslash
+        # stg_df.to_json(path_or_buf=self.output_json_file, indent=4, orient='records')
+
+        results = stg_df.to_dict(orient='records')
+        with open(self.output_json_file, 'w') as f:
+            json.dump(results, f, indent=4, default=str)
+ 
         print(f'===== Processed {len(stg_df)} files ====')
 
         print(f'===== Had {len(failures)} failed file parsings ====')
@@ -97,8 +112,9 @@ class Form13F_HR_Extractor:
                 #print("not common stock________", info_table['titleOfClass'], "___________",info_table['nameOfIssuer'])
                 pass
             else:
+                stripped_cik = manager_cik.lstrip('0')
                 res.append({
-                    FILING_MANAGER_CIK_COL: manager_cik,
+                    FILING_MANAGER_CIK_COL: stripped_cik,
                     FILING_MANAGER_NAME_COL: manager_name,
                     FILING_MANAGER_ADDRESS_COL: manager_address,
                     REPORT_PERIOD_COL: report_period,

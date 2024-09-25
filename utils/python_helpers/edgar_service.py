@@ -88,7 +88,7 @@ class EdgarService:
           print("Master index file not found. First run `parse_master_index_file`")
           return
       
-      print(f"Downloading Form {form} filings for {cik} to folder {output_dir}/{form}")
+      print(f"Downloading Form {form} filings to folder {output_dir}/{form}")
 
       to_dl = []
       with open(master_index_csv_file, "r") as f:

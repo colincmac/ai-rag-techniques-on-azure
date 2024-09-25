@@ -20,13 +20,13 @@ class Form10kExtractor:
               cik,date,accession = file_id.split("_")
               print(f"Processing: {cik} - {date} - {file_id}")
               output_file_path = os.path.join(output_directory, f"{file_id}.json")
-              # print(reference_df.loc[reference_df['cik'] == int(cik)])
+
               if int(cik) not in reference_df['cik'].values:
                   print(f"{cik} not found in reference file")
                   continue
               reference = reference_df.loc[reference_df['cik'] == int(cik)].iloc[0]
-              # cusips = reference['cusips']
-              # if cusips.indexOf(',') > -1: 
+
+
               cusips = str(reference['cusips']).split(',')
 
               self.load_parse_save(file, output_file_path, cik, cusips, reference['name'], reference['exchange'], reference['ticker'], date, accession)
