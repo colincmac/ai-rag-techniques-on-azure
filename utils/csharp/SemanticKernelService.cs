@@ -62,12 +62,14 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
                 endpoint: Configuration.AzureOpenAIEndpoint,
                 apiKey: Configuration.AzureOpenAIKey,
                 deploymentName: Configuration.AzureOpenAIEmbeddingDeployName,
-                serviceId: $"{AzureAIServiceKey}:{Configuration.AzureOpenAIEmbeddingDeployName}");
+                serviceId: $"{AzureAIServiceKey}:{Configuration.AzureOpenAIEmbeddingDeployName}")
+            ;
     }
 
 
     public IKernelBuilder GetDefaultKernelBuilder()
     {
+        defaultKernelBuilder.Services.AddSingleton(s_tokenizer);
         return defaultKernelBuilder;
     }
 

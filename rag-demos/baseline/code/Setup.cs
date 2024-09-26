@@ -1,6 +1,7 @@
 #!import ../../utils/csharp/SemanticKernelService.cs 
 #!import ../../utils/csharp/AzureAISearchSettings.cs 
 #!import ../../utils/csharp/CosmosNoSqlService.cs 
+#!import ../../utils/csharp/CosmosSpecHelpers.cs 
 
 #pragma warning disable SKEXP0001
 #r "nuget: Azure.AI.OpenAI, 2.0.0-beta.3"

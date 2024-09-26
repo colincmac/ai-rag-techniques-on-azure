@@ -131,3 +131,4 @@ public class CosmosSystemTextJsonSerializer : CosmosLinqSerializer
         return memberInfo.Name;
     }
 }
+
