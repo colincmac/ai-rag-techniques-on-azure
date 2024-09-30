@@ -1,7 +1,6 @@
 #!import ../../utils/csharp/SemanticKernelService.cs 
 #!import ../../utils/csharp/AzureAISearchSettings.cs 
 #!import ../../utils/csharp/CosmosNoSqlService.cs 
-#!import ../../utils/csharp/CosmosSpecHelpers.cs 
 
 #pragma warning disable SKEXP0001
 #r "nuget: Azure.AI.OpenAI, 2.0.0-beta.3"
@@ -28,8 +27,9 @@ using Azure;
 using Azure.Identity;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-
-
+using System.Linq.Expressions;
+using System.Linq;
+using System.Text.RegularExpressions;
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Models;
@@ -37,6 +37,8 @@ using Azure.Search.Documents.Indexes.Models;
 
 
 using Microsoft.Azure.Cosmos;
+using Microsoft.Azure.Cosmos.Linq;
+
 using Microsoft.SemanticKernel.Connectors.AzureCosmosDBNoSQL;
 using Microsoft.SemanticKernel.Embeddings;
 

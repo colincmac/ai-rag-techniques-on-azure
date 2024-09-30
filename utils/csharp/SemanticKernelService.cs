@@ -56,13 +56,11 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
             .AddAzureOpenAIChatCompletion(
                 endpoint: Configuration.AzureOpenAIEndpoint,
                 apiKey: Configuration.AzureOpenAIKey,
-                deploymentName: Configuration.AzureOpenAIChatCompletionDeployName,
-                serviceId: $"{AzureAIServiceKey}:{Configuration.AzureOpenAIChatCompletionDeployName}")
+                deploymentName: Configuration.AzureOpenAIChatCompletionDeployName)
             .AddAzureOpenAITextEmbeddingGeneration(
                 endpoint: Configuration.AzureOpenAIEndpoint,
                 apiKey: Configuration.AzureOpenAIKey,
-                deploymentName: Configuration.AzureOpenAIEmbeddingDeployName,
-                serviceId: $"{AzureAIServiceKey}:{Configuration.AzureOpenAIEmbeddingDeployName}")
+                deploymentName: Configuration.AzureOpenAIEmbeddingDeployName)
             ;
     }
 
@@ -80,20 +78,20 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
         var resourceBuilder = ResourceBuilder
             .CreateDefault()
             .AddService("TelemetryExample");
-        using var traceProvider = Sdk.CreateTracerProviderBuilder()
+        var traceProvider = Sdk.CreateTracerProviderBuilder()
             .SetResourceBuilder(resourceBuilder)
             .AddSource("Microsoft.SemanticKernel*")
             .AddSource("Telemetry.Example")
             .AddAzureMonitorTraceExporter(options => options.ConnectionString = Configuration.ApplicationInsightsConnectionString)
             .Build();
 
-        using var meterProvider = Sdk.CreateMeterProviderBuilder()
+        var meterProvider = Sdk.CreateMeterProviderBuilder()
             .SetResourceBuilder(resourceBuilder)
             .AddMeter("Microsoft.SemanticKernel*")
             .AddAzureMonitorMetricExporter(options => options.ConnectionString =  Configuration.ApplicationInsightsConnectionString)
             .Build();
 
-        using var loggerFactory = LoggerFactory.Create(builder =>
+        var loggerFactory = LoggerFactory.Create(builder =>
         {
             // Add OpenTelemetry as a logging provider
             builder.AddOpenTelemetry(options =>
@@ -111,5 +109,6 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
         builder.Services.AddSingleton(loggerFactory);
         return builder;
     }
+
     public record Config(string AzureOpenAIEndpoint, string AzureOpenAIKey, string AzureOpenAIChatCompletionDeployName, string AzureOpenAIEmbeddingDeployName, string AzureOpenAIEmbeddingModelName, string ApplicationInsightsConnectionString);
 }

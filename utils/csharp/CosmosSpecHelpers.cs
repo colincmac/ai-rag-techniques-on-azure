@@ -5,8 +5,8 @@ public interface IEmbedded
 {
     ReadOnlyMemory<float> Embedding { get; }
 
-    double SimilarityScore { get; set; }
-    double RelevanceScore { get; set; }
+    double SimilarityScore { get; }
+    double RelevanceScore { get; }
 }
 
 // public static class CosmosExtensions
@@ -324,7 +324,6 @@ public class VectorSearchSpecification<T> : Specification<T> where T : IEmbedded
     {
         // Assume that the entity T has a property named 'Embedding' of type ReadOnlyMemory<float>
         // Adjust the property name as per your entity's definition
-
         return entity => entity.Embedding.VectorDistance(_inputEmbedding) >= _minRelevanceScore;
     }
 }
@@ -436,12 +435,14 @@ public class QueryOptions<T, TResult>
 
 public static class SpecificationEvaluator
 {
+    public static IQueryable<T> GetQuery<T>(IQueryable<T> inputQuery, QueryOptions<T, T> queryOptions) => GetQuery<T, T>(inputQuery, queryOptions);
     public static IQueryable<TResult> GetQuery<T, TResult>(
         IQueryable<T> inputQuery,
         QueryOptions<T, TResult> queryOptions)
     {
+
         if (queryOptions == null)
-            return inputQuery.Cast<TResult>();
+            return (IQueryable<TResult>)inputQuery;
 
         var query = inputQuery;
 
@@ -466,7 +467,7 @@ public static class SpecificationEvaluator
         }
         else
         {
-            resultQuery = query.Cast<TResult>();
+            resultQuery = (IQueryable<TResult>)query;
         }
 
         // Apply paging specification

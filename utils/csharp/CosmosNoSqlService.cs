@@ -6,6 +6,7 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Azure.Cosmos;
+using Azure.Identity;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using Azure.Core.Serialization;
@@ -13,7 +14,6 @@ using Container = Microsoft.Azure.Cosmos.Container;
 public class CosmosNoSqlService: ServiceFromConfig<CosmosNoSqlService.Config>
 {
     public Database databaseClient;
-    public Container containerClient;
 
     public CosmosNoSqlService(string configFile = DEFAULT_CONFIG_FILE): base(configFile)
     {
@@ -22,8 +22,10 @@ public class CosmosNoSqlService: ServiceFromConfig<CosmosNoSqlService.Config>
             PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
         };
+
         var client = new CosmosClient(
-            connectionString: Configuration.CosmosConnectionString,
+            accountEndpoint: Configuration.CosmosEndpoint,
+            tokenCredential: new DefaultAzureCredential(),
             clientOptions: new CosmosClientOptions()
             {
                 Serializer = new CosmosSystemTextJsonSerializer(serializerOptions),
@@ -31,27 +33,29 @@ public class CosmosNoSqlService: ServiceFromConfig<CosmosNoSqlService.Config>
             }
         );
         this.databaseClient = client.GetDatabase(Configuration.CosmosDatabase);
-        this.containerClient = this.databaseClient.GetContainer(Configuration.CosmosContainer);
     }
     
-    public async Task BulkUpload<T>(IEnumerable<T> items) where T : PartitionedEntity
+    public async Task BulkUpload<T>(string containerName, IEnumerable<T> items) where T : PartitionedEntity
     {
-        var uploadTasks = items.Select(item => containerClient.CreateItemAsync(item, new PartitionKey(item.PartitionKey))).ToAsyncEnumerable();
+        var container = databaseClient.GetContainer(containerName);
+        var uploadTasks = items.Select(item => container.CreateItemAsync(item, new PartitionKey(item.PartitionKey))).ToAsyncEnumerable();
         await foreach (var task in uploadTasks)
         {
             await task;
         }
     }
     
-    public async Task BulkUpload<T>(IAsyncEnumerable<T> items) where T : PartitionedEntity
+    public async Task BulkUpload<T>(string containerName, IAsyncEnumerable<T> items) where T : PartitionedEntity
     {
+        var container = databaseClient.GetContainer(containerName);
+
         await foreach (var item in items)
         {
             ItemResponse<T> itemResponse = null;
 
             try
             {
-                itemResponse = await containerClient.CreateItemAsync(item);
+                itemResponse = await container.CreateItemAsync(item);
             }
             catch (Exception _)
             {
@@ -60,7 +64,7 @@ public class CosmosNoSqlService: ServiceFromConfig<CosmosNoSqlService.Config>
         }
     }
 
-    public record Config(string CosmosEndpoint, string CosmosKey, string CosmosDatabase, string CosmosContainer, string CosmosConnectionString);
+    public record Config(string CosmosEndpoint, string CosmosDatabase);
 }
 
 public class PartitionedEntity
