@@ -29,7 +29,7 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Linq.Expressions;
 using System.Linq;
-using System.Text.RegularExpressions;
+using System.Text.RegularExpressions;dfdd
 using Azure.Search.Documents;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Models;
@@ -42,7 +42,7 @@ using Microsoft.Azure.Cosmos.Linq;
 using Microsoft.SemanticKernel.Connectors.AzureCosmosDBNoSQL;
 using Microsoft.SemanticKernel.Embeddings;
 
-// using Microsoft.SemanticKernel.Data;
+// using Microsoft.SemanticKernel.Data; // If using the current implementation of Semantic Kernel Vector or Memory data stores.
 using IndexKind = Microsoft.Azure.Cosmos.IndexKind;
 using System.Reflection;
 using Azure.Core.Serialization;

@@ -68,6 +68,7 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
     public IKernelBuilder GetDefaultKernelBuilder()
     {
         defaultKernelBuilder.Services.AddSingleton(s_tokenizer);
+        defaultKernelBuilder.Services.AddTransient<Kernel>();
         return defaultKernelBuilder;
     }
 
