@@ -1,15 +1,5 @@
 #pragma warning disable SKEXP0001,SKEXP0020
 
-/**
-* Just for reference, Semantic Kernel has abstracted concepts around vector databases for AI RAG applications.
-* This solution could be built using annotations instead and the underlying DB could be changed without changing the application code.
-public record 10KDocument(
-    [property: VectorStoreRecordKey] string HotelId,
-    [property: VectorStoreRecordData] string HotelName,
-    [property: VectorStoreRecordData] string Description,
-    [property: VectorStoreRecordVector(Dimensions: 4, IndexKind: IndexKind.Hash, DistanceFunction: DistanceFunction.CosineSimilarity), JsonPropertyName("description_embeddings")] ReadOnlyMemory<float>? DescriptionEmbeddings);
-
-*/
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public class VectorStoreEntityAttribute: Attribute
 {
@@ -36,22 +26,11 @@ public abstract record VectorStoreEntity
 {   
     public int Tokens { get; set; } = 0;
 
-    [JsonIgnore]
-    public double SimilarityScore { get; set; } = 0.0;
+    [JsonIgnore, Description("The cosine similarity score of the query embedding to the document embedding. Ranges from -1 to 1.")]
+    public double CosineSimilarityScore { get; set; } = 0.0;
 
-    [JsonIgnore]
-    public double RelevanceScore => (SimilarityScore + 1) / 2;
-
-    public void UpdateTokenCount(Tokenizer tokenizer)
-    {
-        Tokens = this.GetTokenCount(tokenizer);
-    }
-
-    public async Task UpdateEmbedding(ITextEmbeddingGenerationService textEmbeddingService, CancellationToken cancellationToken = default)
-    {
-        var embedding = await this.GetEmbedding(textEmbeddingService, cancellationToken);
-        this.GetType().GetProperty("Embedding")?.SetValue(this, embedding);
-    }
+    [JsonIgnore, Description("Converts Cosine Similiarity to a range of 0 to 1")]
+    public double RelevanceScore => (CosineSimilarityScore + 1) / 2;
 
     public string GetContextWindow() => this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.GetCustomAttribute<VectorStoreEmbeddingAttribute>() != null)
@@ -66,14 +45,6 @@ public abstract record VectorStoreEntity
             })
             .Aggregate(new StringBuilder(), (sb, value) => sb.AppendLine(value), sb => sb.ToString());
 
-    public Task<ReadOnlyMemory<float>> GetEmbedding(ITextEmbeddingGenerationService textEmbeddingService, CancellationToken cancellationToken = default)
-    {
-        var embeddingString = this.GetContextWindow();
-        return textEmbeddingService.GenerateEmbeddingAsync(value: embeddingString, cancellationToken: cancellationToken);
-    }
-
-    public int GetTokenCount(Tokenizer s_tokenizer) => s_tokenizer.CountTokens(this.GetContextWindow());
-
     public PartitionKey GetPartitionKey() => this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance)
         .Where(p => p.GetCustomAttribute<VectorStorePartitionKeyAttribute>() != null)
         .Select(p => p.GetValue(this) as string ?? string.Empty)
@@ -84,7 +55,6 @@ public abstract record VectorStoreEntity
         .Where(p => p.GetCustomAttribute<VectorStoreIdAttribute>() != null)
         .Select(p => p.GetValue(this) as string)
         .FirstOrDefault();
-
 };
 
 /**
@@ -94,12 +64,13 @@ public abstract record VectorStoreEntity
 public record CacheItem(
     [property: VectorStoreId, VectorStorePartitionKey] string Id, 
     [property: VectorStoreEmbeddingData] string Prompts,
-    string Completion, 
+    ChatMessageContent Completion, 
     [property: VectorStoreEmbedding] ReadOnlyMemory<float> Embedding): VectorStoreEntity
 {
     public int Ttl => CalculateTtl();
     public int CacheHits { get; set; } = 1; // Start with 1 to avoid immediate eviction
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
     public void RegisterHit()
     {
         CacheHits++;
@@ -150,7 +121,8 @@ public record ChatThreadMessage(
     [property: VectorStoreId] string Id, 
     [property: VectorStorePartitionKey] string UserId, 
     [property: VectorStorePartitionKey] string ThreadId, 
-    ChatMessageContent MessageContent): VectorStoreEntity
+    ChatMessageContent MessageContent
+): VectorStoreEntity
 {
     public string Type { get; set; } = "ChatThreadMessage";
     public bool Deleted { get; set; } = false;
@@ -161,6 +133,9 @@ public record ChatThreadMessage(
 
     [JsonIgnore]
     public bool CacheHit { get; set; } = false;
+
+    [JsonIgnore]
+    public string CacheReferenceId { get; set; } = default;
 
     [JsonIgnore]
     public bool FinishedStream { get; set; } = true;
@@ -174,7 +149,8 @@ public record ChatThreadMessage(
 public record ChatThread(
     [property: VectorStorePartitionKey] string UserId, 
     [property: VectorStorePartitionKey] string ThreadId, 
-    string DisplayName = "New Chat"): VectorStoreEntity
+    string DisplayName = "New Chat"
+): VectorStoreEntity
 {
     public string Type { get; set; } = "ChatThread";
     
@@ -517,22 +493,16 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         _embeddingPropertyName = GetEmbeddedFieldPropertyName();
     }
 
-    public async Task UpsertAsync(TRecord item, bool updateEmbeddingFields = false, CancellationToken cancellationToken = default)
+    public async Task UpsertAsync(TRecord item, CancellationToken cancellationToken = default)
     {
-        if(updateEmbeddingFields)
-        {
-            item.UpdateTokenCount(_tokenizer);
-            await item.UpdateEmbedding(_textEmbeddingService);
-        }
-        
         await _container.UpsertItemAsync(item, cancellationToken: cancellationToken);
     }
 
-    public async Task UpsertBatch(IEnumerable<TRecord> items, bool updateEmbeddingFields = false, CancellationToken cancellationToken = default)
+    public async Task UpsertBatch(IEnumerable<TRecord> items, CancellationToken cancellationToken = default)
     {
         foreach (var item in items)
         {
-            await UpsertAsync(item, updateEmbeddingFields, cancellationToken);
+            await UpsertAsync(item, cancellationToken);
         }
     }
 
@@ -561,15 +531,15 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
     * @param (Optional) queryEmbedding The embedding to use for similarity search.
     * @param (Optional) minRelevance The minimum relevance score for the results if using a VectorDistance.
     */
-    public async IAsyncEnumerable<TRecord> FindItems(Expression<Func<TRecord, bool>> predicate, Expression<Func<TRecord, object>> select, int maxResults, ReadOnlyMemory<float>? queryEmbedding = null, double? minRelevance = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    public async IAsyncEnumerable<TRecord> FindItems(Expression<Func<TRecord, bool>> predicate, Expression<Func<TRecord, object>> select, int maxResults, ReadOnlyMemory<float>? queryEmbedding = null, double? minRelevanceScore = null, [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         const string VectorVariableName = "@vectors";
         const string LimitVariableName = "@limit";
-        const string MinRelevanceVariableName = "@minRelevanceScore";
+        const string SimilarityVariableName = "@similarityScore";
         const string TableAlias = "c";
         const string FromTableAlias = "s";
 
-        var usingEmbedding = queryEmbedding is not null && minRelevance is not null;
+        var usingEmbedding = queryEmbedding is not null && minRelevanceScore is not null;
 
         // Where statement from predicate
         var whereStatement = GetCosmosWhere(predicate, TableAlias);   
@@ -583,11 +553,11 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
 
         if(usingEmbedding)
         {
-            whereStatement += $" AND {TableAlias}.similarityScore >= {MinRelevanceVariableName}";
-            extractedFromSelectStatement += $", VectorDistance({FromTableAlias}.{_embeddingPropertyName}, {VectorVariableName}, false) as similarityScore";
+            whereStatement += $" AND {TableAlias}.cosineSimilarityScore >= {SimilarityVariableName}";
+            extractedFromSelectStatement += $", VectorDistance({FromTableAlias}.{_embeddingPropertyName}, {VectorVariableName}, false) as cosineSimilarityScore";
             optionalOrderByStatement += $"""
             ORDERBY 
-                {TableAlias}.similarityScore desc
+                {TableAlias}.cosineSimilarityScore desc
             """;
         } 
 
@@ -607,7 +577,7 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         if(usingEmbedding)
         {
             queryDefinition.WithParameter(VectorVariableName, queryEmbedding.Value.ToArray());
-            queryDefinition.WithParameter(MinRelevanceVariableName, minRelevance);
+            queryDefinition.WithParameter(SimilarityVariableName, CosineSimilarityFromRelevanceScore(minRelevanceScore!.Value));
         }
 
         using var feedIterator = this._container
@@ -622,7 +592,7 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         }
     }
 
-    public async IAsyncEnumerable<(TRecord, double)> GetNearestMatchesAsync(
+    public async IAsyncEnumerable<TRecord> GetNearestMatchesAsync(
         ReadOnlyMemory<float> embedding,
         string[] fields,
         int limit = 1,
@@ -631,7 +601,7 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
     {
         const string VectorVariableName = "@vectors";
         const string LimitVariableName = "@limit";
-        const string MinRelevanceVariableName = "@minRelevanceScore";
+        const string SimilarityVariableName = "@similarityScore";
 
         Func<string, string> getSelectItems = (string prefix) => string.Join($", {prefix}.", fields);
 
@@ -641,18 +611,18 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
                 {getSelectItems("p")}
             FROM 
                 (SELECT {getSelectItems("s")},
-                VectorDistance(s.{_embeddingPropertyName}, {VectorVariableName}, false) as similarityScore FROM s) 
+                VectorDistance(s.{_embeddingPropertyName}, {VectorVariableName}, false) as cosineSimilarityScore FROM s) 
             p 
             WHERE 
-                p.similarityScore >= {MinRelevanceVariableName}
+                p.cosineSimilarityScore >= {SimilarityVariableName}
             ORDER BY 
-                p.similarityScore desc
+                p.cosineSimilarityScore desc
             """;
 
         var queryDefinition = new QueryDefinition(queryText)
             .WithParameter(VectorVariableName, embedding.ToArray())
             .WithParameter(LimitVariableName, limit)
-            .WithParameter(MinRelevanceVariableName, minRelevanceScore);
+            .WithParameter(SimilarityVariableName, CosineSimilarityFromRelevanceScore(minRelevanceScore));
 
         using var feedIterator = this._container
          .GetItemQueryIterator<TRecord>(queryDefinition);
@@ -661,11 +631,7 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         {
             foreach (var document in await feedIterator.ReadNextAsync(cancellationToken).ConfigureAwait(false))
             {
-                var relevanceScore = (document.SimilarityScore + 1) / 2;
-                if (relevanceScore >= minRelevanceScore)
-                {
-                    yield return (document, relevanceScore);
-                }
+                yield return document;
             }
         }
     }
@@ -675,25 +641,25 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         [EnumeratorCancellation] CancellationToken cancellationToken = default)
     {
         const string VectorVariableName = "@vectors";
-        const string SimilarityScoreVariableName = "@similarityScore";
-        double similarityScore = 0.99;
+        const string SimilarityScoreVariableName = "@cosineSimilarityScore";
+        double cosineSimilarityScore = 0.99;
 
         string queryText = $"""
             SELECT 
                 Top 1 c.id
             FROM 
                 (SELECT c.id,
-                VectorDistance(s.{_embeddingPropertyName}, {VectorVariableName}, false) as similarityScore FROM c)
+                VectorDistance(s.{_embeddingPropertyName}, {VectorVariableName}, false) as cosineSimilarityScore FROM c)
             p 
             WHERE 
-                p.similarityScore >= {SimilarityScoreVariableName}
+                p.cosineSimilarityScore >= {SimilarityScoreVariableName}
             ORDER BY 
-                p.similarityScore desc
+                p.cosineSimilarityScore desc
             """;
 
         var queryDefinition = new QueryDefinition(queryText)
             .WithParameter(VectorVariableName, embedding.ToArray())
-            .WithParameter(SimilarityScoreVariableName, similarityScore);
+            .WithParameter(SimilarityScoreVariableName, cosineSimilarityScore);
 
         using var feedIterator = this._container
          .GetItemQueryIterator<TRecord>(queryDefinition);
@@ -752,6 +718,9 @@ public class VectorCollection<TRecord> where TRecord : VectorStoreEntity
         var whereStatement = Regex.Replace(extractedWhereStatement, @"root\[""(\w+)""\]", $"{tableAlias}.$1"); 
         return whereStatement;
     }
+
+    private double RelevanceScoreFromCosineSimilarity(double cosineSimilarity) => (cosineSimilarity + 1) / 2;
+    private double CosineSimilarityFromRelevanceScore(double relevanceScore) => 2 * relevanceScore - 1;
 }
 
 

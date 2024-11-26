@@ -2,6 +2,8 @@ temp
 yfinance.cache
 env.json
 experimental.ipynb
+
+.vs
 # C# Visual Studio
 # Build results
 [Dd]ebug/

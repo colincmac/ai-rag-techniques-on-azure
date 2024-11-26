@@ -1,0 +1,6 @@
+@Showcase.GitHubCopilot.Agent_HostAddress = http://localhost:5273
+
+GET {{Showcase.GitHubCopilot.Agent_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

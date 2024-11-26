@@ -1,16 +1,16 @@
-
-#r "nuget: Microsoft.SemanticKernel, 1.19.0"
-#r "nuget: Microsoft.SemanticKernel.Connectors.OpenAI, 1.19.0"
-// #r "nuget: Microsoft.SemanticKernel.Plugins.Memory, 1.18.1-alpha"
-#r "nuget: Microsoft.SemanticKernel.Planners.OpenAI, 1.19.0-preview"
+#r "nuget: Microsoft.SemanticKernel, 1.21.1"
+#r "nuget: Microsoft.SemanticKernel.Agents.Core, 1.21.1-alpha"
+#r "nuget: Microsoft.SemanticKernel.Agents.OpenAI, 1.21.1-alpha"
+#r "nuget: Microsoft.SemanticKernel.Connectors.OpenAI, 1.21.1"
+#r "nuget: Microsoft.SemanticKernel.Planners.OpenAI, 1.21.1-preview"
 #r "nuget: Microsoft.ML.Tokenizers, 0.22.0-preview.24378.1"
 #r "nuget: Azure.Monitor.OpenTelemetry.Exporter, 1.3.0"
-#r "nuget: Microsoft.SemanticKernel.Connectors.AzureCosmosDBNoSQL, 1.19.0-alpha"
+// #r "nuget: Microsoft.SemanticKernel.Connectors.AzureCosmosDBNoSQL, 1.19.0-alpha"
 
 #!import ../../utils/csharp/ServiceFromConfig.cs 
 
-// Disabling Experimental warnings
-#pragma warning disable SKEXP0001,SKEXP0010
+#pragma warning disable SKEXP0001, SKEXP0010, SKEXP0110
+
 
 using System;
 using System.Collections.Generic;
@@ -25,8 +25,9 @@ using Microsoft.SemanticKernel.Planning;
 using Microsoft.SemanticKernel.ChatCompletion;
 using Microsoft.SemanticKernel.Embeddings;
 using Microsoft.SemanticKernel.Text;
-using Microsoft.SemanticKernel.Memory;
-using Microsoft.SemanticKernel.Connectors.AzureCosmosDBNoSQL;
+using Microsoft.SemanticKernel.Agents.OpenAI;
+using Microsoft.SemanticKernel.Agents;
+
 using Microsoft.Azure.Cosmos;
 
 using System.Diagnostics;
@@ -41,11 +42,12 @@ using Microsoft.Extensions.DependencyInjection;
 
 public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Config>
 {
-    private const string AzureAIServiceKey = "AzureOpenAI";
+    public const string ChatCompletionServiceKey = "AzureOpenAI:ChatCompletion";
+    public const string TextEmbeddingServiceKey = "AzureOpenAI:TextEmbedding";
     private IKernelBuilder defaultKernelBuilder;
     public Tokenizer s_tokenizer;
     public OpenAIPromptExecutionSettings functionCallingPromptExecutionSettings = new OpenAIPromptExecutionSettings { ToolCallBehavior = ToolCallBehavior.AutoInvokeKernelFunctions };
-    
+
     private static readonly ActivitySource s_activitySource = new("SemanticKernel");
 
 
@@ -56,12 +58,13 @@ public class SemanticKernelService : ServiceFromConfig<SemanticKernelService.Con
             .AddAzureOpenAIChatCompletion(
                 endpoint: Configuration.AzureOpenAIEndpoint,
                 apiKey: Configuration.AzureOpenAIKey,
-                deploymentName: Configuration.AzureOpenAIChatCompletionDeployName)
+                deploymentName: Configuration.AzureOpenAIChatCompletionDeployName,
+                serviceId: ChatCompletionServiceKey)
             .AddAzureOpenAITextEmbeddingGeneration(
                 endpoint: Configuration.AzureOpenAIEndpoint,
                 apiKey: Configuration.AzureOpenAIKey,
-                deploymentName: Configuration.AzureOpenAIEmbeddingDeployName)
-            ;
+                deploymentName: Configuration.AzureOpenAIEmbeddingDeployName,
+                serviceId: TextEmbeddingServiceKey);
     }
 
 

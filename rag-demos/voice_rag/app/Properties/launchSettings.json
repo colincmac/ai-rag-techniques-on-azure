@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "CallAutomation_AzOpenAI_Voice": {
+      "commandName": "Project",
+      "applicationUrl": "http://localhost:8080;http://localhost:7071",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "VS_TUNNEL_URL": "https://func.colinmac.me"
+      }
+    }
+  }
+}
